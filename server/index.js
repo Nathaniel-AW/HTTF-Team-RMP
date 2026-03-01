@@ -22,7 +22,6 @@ app.use((req, res, next) => {
   next();
 });
 
-console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
 const openaiKey = process.env.OPENAI_API_KEY;
 const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
 const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
