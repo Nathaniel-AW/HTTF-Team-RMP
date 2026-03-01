@@ -5,6 +5,7 @@ RMPScraper.py web scrapes rate my professor website and returns a csv file with 
 Import the csv into the supabase to allow database to query
 
 After cloneing run py -m pip freeze > requirements.txt
+If that does not work try py -m pip install selenium webdriver-manager beautifulsoup4 requests pandas
 
 ## Stack
 
