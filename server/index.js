@@ -4,6 +4,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
+import { promises as fs } from "fs";
 import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -125,7 +126,15 @@ async function getReviewsFromLocalFile(professorId) {
 function runScraper(url) {
   return new Promise((resolve, reject) => {
     const pythonArgs = ["RMPScraper.py", "--url", url, "--json"];
-    const pythonCmd = process.platform === "win32" ? "py" : "venv/bin/python3";
+    // Use 'python' or 'py' on Windows, 'python3' on Unix-like systems
+    let pythonCmd;
+    if (process.platform === "win32") {
+      pythonCmd = "python";
+    } else {
+      // On Unix, try python3 first, fall back to python
+      pythonCmd = "python3";
+    }
+    
     const scraper = spawn(pythonCmd, pythonArgs, {
       cwd: path.resolve(__dirname, ".."),
       env: process.env,
