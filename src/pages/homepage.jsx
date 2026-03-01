@@ -1,38 +1,6 @@
 import { useState } from "react";
 import { Link } from 'react-router-dom';
 
-const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
-
-function normalizeRateMyProfUrl(value) {
-    if (!value) {
-        return null;
-    }
-
-    const trimmed = value.trim();
-    if (!trimmed) {
-        return null;
-    }
-
-    const candidate = trimmed.includes("://") ? trimmed : `https://${trimmed}`;
-    let parsed;
-    try {
-        parsed = new URL(candidate);
-    } catch {
-        return null;
-    }
-
-    const hostname = parsed.hostname.toLowerCase();
-    if (!hostname.endsWith("ratemyprofessors.com")) {
-        return null;
-    }
-
-    if (!RATE_MY_PROFESSORS_PATH_REGEX.test(parsed.pathname)) {
-        return null;
-    }
-
-    return parsed.toString();
-}
-
 function HomePage() {
     const [school, setSchool] = useState("");
     const [professor, setProfessor] = useState("");

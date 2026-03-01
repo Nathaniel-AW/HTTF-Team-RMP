@@ -1,19 +1,86 @@
-# README
+# HTTF Team RMP
 
-RMPScraper.py web scrapes rate my professor website and returns a csv file with reviews.
-
-Import the csv into the supabase to allow database to query
-
-After cloneing run py -m pip freeze > requirements.txt
-If that does not work try py -m pip install selenium webdriver-manager beautifulsoup4 requests pandas
+RateMyProfessors URL in, AI summary/score/chat out.
 
 ## Stack
 
-React + Vite + Supabase
+- Vite + React frontend
+- Node + Express backend
+- Python Selenium scraper (`RMPScraper.py`)
+- OpenAI API
 
-## RMPScraper
+## Local setup
 
-## Expanding the ESLint configuration
+1. Install dependencies:
+   - `npm install`
+   - `pip install -r requirements.txt`
+2. Create `.env` with:
+   - `OPENAI_API_KEY=your_key_here`
+3. Run backend API:
+   - `npm run server`
+4. Run frontend:
+   - `npm run dev`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## API
 
+### `POST /api/reviews/summary`
+Alias: `POST /api/summarize`
+
+Request:
+
+```json
+{
+  "professorUrl": "https://www.ratemyprofessors.com/professor/3126905"
+}
+```
+
+Response:
+
+```json
+{
+  "summaryParagraph": "string",
+  "numericScore": 0,
+  "scoreExplanation": "string",
+  "professorContext": {
+    "professorName": "string",
+    "schoolName": "string",
+    "department": "string",
+    "ratingStats": {
+      "overall": 0,
+      "difficulty": 0,
+      "wouldTakeAgain": 0
+    },
+    "reviewCount": 0,
+    "reviewsSample": [
+      {
+        "date": "string",
+        "rating": 0,
+        "difficulty": 0,
+        "tags": ["string"],
+        "text": "string"
+      }
+    ]
+  }
+}
+```
+
+### `POST /api/chat`
+
+Request:
+
+```json
+{
+  "messages": [
+    { "role": "user", "content": "How hard is this class?" }
+  ],
+  "professorContext": { "...": "context from summary response" }
+}
+```
+
+Response:
+
+```json
+{
+  "answer": "string"
+}
+```
