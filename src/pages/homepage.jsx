@@ -50,7 +50,7 @@ function HomePage() {
                             />
                         </div>
                             <Link
-                                to="/searchResults"
+                                to="/endScore"
                                 aria-label="Go to search Results"
                             >
                                 <button type="submit">Submit</button>
