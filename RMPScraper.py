@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import time
 import re
+import argparse
 
 
 def scrape_all_reviews(professor_url):
@@ -130,19 +131,39 @@ def scrape_all_reviews(professor_url):
 
     return pd.DataFrame(reviews_data)
 
+def clean_and_export(df: pd.DataFrame, csv_path: str | None = None, verbose: bool = True) -> str:
+    df["rating"] = pd.to_numeric(df["rating"], errors="coerce")
+    df.drop_duplicates(inplace=True)
 
-# 🔹 Replace with real professor URL
-url = "https://www.ratemyprofessors.com/professor/2574020"
-df = scrape_all_reviews(url)
+    if csv_path:
+        output_path = csv_path
+    elif not df.empty and "professor_id" in df.columns:
+        output_path = f"{df['professor_id'].iloc[0]}.csv"
+    else:
+        output_path = "reviews.csv"
 
-# Clean data
-df["rating"] = pd.to_numeric(df["rating"], errors="coerce")
-df.drop_duplicates(inplace=True)
+    df.to_csv(output_path, index=False, encoding="utf-8")
+    if verbose:
+        print(f"Saved {len(df)} reviews to {output_path}")
+    return output_path
 
-# Save to CSV
-professor_id = df["professor_id"].iloc[0]
-csv_filename = f"{professor_id}.csv"
-df.to_csv(csv_filename, index=False, encoding="utf-8")
 
-print("Scraped", len(df), "reviews")
-print(df.head())
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Scrape RateMyProfessors reviews for one professor.")
+    parser.add_argument("--url", "-u", default="https://www.ratemyprofessors.com/professor/3126905", help="Full RateMyProfessors professor URL")
+    parser.add_argument("--csv", "-c", help="Optional path to save CSV output")
+    parser.add_argument("--json", action="store_true", help="Print cleaned reviews as JSON to stdout")
+    args = parser.parse_args()
+
+    df = scrape_all_reviews(args.url)
+    if df.empty:
+        if not args.json:
+            print("No reviews were scraped.")
+        return
+    clean_and_export(df, args.csv, verbose=not args.json)
+    if args.json:
+        print(df.to_json(orient="records", force_ascii=False))
+
+
+if __name__ == "__main__":
+    main()
