@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Badge from "../components/ui/Badge";
-import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
 import Spinner from "../components/ui/Spinner";
+import Achievements from "../components/Achievements";
+import Citations from "../components/Citations";
+import ProfessorChat from "../components/ProfessorChat";
+import ScoreBreakdown from "../components/ScoreBreakdown";
 
 const EMPTY_COURSES = [];
 const NOTABLE_REVIEWS_LIMIT = 4;
@@ -15,6 +17,11 @@ const SENTIMENT_BADGE_TONE = {
   Mixed: "warning",
   Critical: "danger",
 };
+const ENRICHMENT_STAGES = [
+  "Gathering sources",
+  "Indexing",
+  "Generating summary/score",
+];
 
 function getScoreDescriptor(score) {
   if (!Number.isFinite(score)) {
@@ -154,19 +161,38 @@ function Summary() {
   const rmpUrl = location.state?.rmpUrl ?? "";
   const selectedCourses = location.state?.selectedCourses ?? EMPTY_COURSES;
 
+  const [professor, setProfessor] = useState(null);
   const [summaryParagraph, setSummaryParagraph] = useState("");
-  const [numericScore, setNumericScore] = useState(null);
-  const [scoreExplanation, setScoreExplanation] = useState("");
+  const [summaryCitations, setSummaryCitations] = useState([]);
+  const [score, setScore] = useState(null);
   const [reviewsCount, setReviewsCount] = useState(0);
+  const [achievements, setAchievements] = useState([]);
+  const [citations, setCitations] = useState([]);
+  const [lastRefreshed, setLastRefreshed] = useState("");
   const [professorContext, setProfessorContext] = useState(null);
 
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState("");
+  const [loadingStageIndex, setLoadingStageIndex] = useState(0);
+  const [enrichmentWarning, setEnrichmentWarning] = useState("");
 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState("");
+
+  useEffect(() => {
+    if (!loadingSummary) {
+      setLoadingStageIndex(0);
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setLoadingStageIndex((previous) => (previous + 1) % ENRICHMENT_STAGES.length);
+    }, 1200);
+
+    return () => window.clearInterval(intervalId);
+  }, [loadingSummary]);
 
   useEffect(() => {
     if (!rmpUrl) {
@@ -181,22 +207,27 @@ function Summary() {
     async function fetchSummary() {
       setLoadingSummary(true);
       setSummaryError("");
+      setEnrichmentWarning("");
       setSummaryParagraph("");
-      setNumericScore(null);
-      setScoreExplanation("");
+      setSummaryCitations([]);
+      setScore(null);
       setReviewsCount(0);
+      setAchievements([]);
+      setCitations([]);
+      setLastRefreshed("");
       setProfessorContext(null);
+      setProfessor(null);
       setChatMessages([]);
       setChatInput("");
       setChatError("");
 
       try {
-        const requestBody = { professorUrl: rmpUrl };
+        const requestBody = { rmpUrl };
         if (Array.isArray(selectedCourses) && selectedCourses.length > 0) {
           requestBody.selectedCourses = selectedCourses;
         }
 
-        const response = await fetch("/api/reviews/summary", {
+        const response = await fetch("/api/professor/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
@@ -211,8 +242,8 @@ function Summary() {
 
         if (!response.ok) {
           const errorMessage = data?.details
-            ? `${data.error ?? "Unable to summarize reviews."} (${data.details})`
-            : (data.error ?? "Unable to summarize reviews.");
+            ? `${data.error ?? "Unable to analyze professor."} (${data.details})`
+            : (data.error ?? "Unable to analyze professor.");
           throw new Error(errorMessage);
         }
 
@@ -220,35 +251,64 @@ function Summary() {
           return;
         }
 
-        const score = Number.isFinite(Number(data.numericScore))
-          ? Math.round(Number(data.numericScore))
-          : null;
+        const resolvedScore =
+          data.score && typeof data.score === "object"
+            ? data.score
+            : {
+                total: Number.isFinite(Number(data.numericScore))
+                  ? Math.round(Number(data.numericScore))
+                  : null,
+                reviews: null,
+                profile: null,
+                weights: { reviews: 0.85, profile: 0.15 },
+                explanation: {
+                  reviews_component_reasoning: data.scoreExplanation ?? "",
+                  profile_component_reasoning: "",
+                },
+              };
 
-        setSummaryParagraph(data.summaryParagraph ?? data.summary ?? "");
-        setNumericScore(score);
-        setScoreExplanation(data.scoreExplanation ?? "");
-
-        const context =
+        const resolvedProfessorContext =
           data.professorContext && typeof data.professorContext === "object"
             ? data.professorContext
             : null;
 
-        setProfessorContext(context);
+        const resolvedProfessor = data.professor && typeof data.professor === "object"
+          ? data.professor
+          : {
+              id: "",
+              name: resolvedProfessorContext?.professorName ?? "Unknown Professor",
+              school: resolvedProfessorContext?.schoolName ?? "Unknown School",
+              department: resolvedProfessorContext?.department ?? "Unknown",
+            };
 
-        const resolvedReviewsCount = Number.isFinite(Number(context?.reviewCount))
-          ? Number(context.reviewCount)
-          : Number(data.reviewsCount ?? 0);
+        setProfessor(resolvedProfessor);
+        setSummaryParagraph(data.summary ?? data.summaryParagraph ?? "");
+        setSummaryCitations(Array.isArray(data.summaryCitations) ? data.summaryCitations : []);
+        setScore(resolvedScore);
+        setAchievements(Array.isArray(data.achievements) ? data.achievements : []);
+        setCitations(Array.isArray(data.citations) ? data.citations : []);
+        setProfessorContext(resolvedProfessorContext);
+        setLastRefreshed(data.professor?.lastRefreshed ?? "");
+        setEnrichmentWarning(
+          data.enrichment?.warning ||
+            data.externalEnrichmentWarning ||
+            (Array.isArray(data.warnings) ? data.warnings[0] : "") ||
+            "",
+        );
+
+        const resolvedReviewsCount = Number.isFinite(Number(data.reviewsCount))
+          ? Number(data.reviewsCount)
+          : Number(resolvedProfessorContext?.reviewCount ?? 0);
         setReviewsCount(resolvedReviewsCount);
 
-        if (context) {
-          setChatMessages([
-            {
-              role: "assistant",
-              content:
-                "Ask me about workload, grading style, class difficulty, or teaching quality. I will answer using the scraped reviews only.",
-            },
-          ]);
-        }
+        setChatMessages([
+          {
+            role: "assistant",
+            content:
+              "Ask about workload, grading, class difficulty, or verified profile achievements. I will cite sources for factual claims.",
+            citations: [],
+          },
+        ]);
       } catch (error) {
         if (isCancelled) {
           return;
@@ -286,23 +346,24 @@ function Summary() {
     }
 
     const trimmedInput = chatInput.trim();
-    if (!trimmedInput || !professorContext) {
+    if (!trimmedInput || !professor?.id) {
       return;
     }
 
-    const nextMessages = [...chatMessages, { role: "user", content: trimmedInput }];
+    const nextMessages = [...chatMessages, { role: "user", content: trimmedInput, citations: [] }];
     setChatMessages(nextMessages);
     setChatInput("");
     setChatError("");
     setChatLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/professor/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: nextMessages,
-          professorContext,
+          professorId: professor.id,
+          message: trimmedInput,
+          recentMessages: nextMessages,
         }),
       });
 
@@ -323,9 +384,33 @@ function Summary() {
       const answer =
         typeof data.answer === "string" && data.answer.trim()
           ? data.answer.trim()
-          : "I do not have enough data in the provided reviews to answer that.";
+          : "I do not have enough data in the provided sources to answer that.";
 
-      setChatMessages((prev) => [...prev, { role: "assistant", content: answer }]);
+      const responseCitations = Array.isArray(data.citations) ? data.citations : [];
+      const responseCitationIds = responseCitations
+        .map((entry) => (typeof entry === "string" ? entry : entry?.id))
+        .filter(Boolean);
+
+      if (responseCitations.some((entry) => entry && typeof entry === "object")) {
+        setCitations((previous) => {
+          const byId = new Map(previous.map((citation) => [citation.id, citation]));
+          responseCitations.forEach((citation) => {
+            if (citation && typeof citation === "object" && citation.id) {
+              byId.set(citation.id, citation);
+            }
+          });
+          return Array.from(byId.values());
+        });
+      }
+
+      setChatMessages((previous) => [
+        ...previous,
+        {
+          role: "assistant",
+          content: answer,
+          citations: responseCitationIds,
+        },
+      ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       const isNetworkFailure =
@@ -343,38 +428,21 @@ function Summary() {
     }
   }
 
+  const numericScore = Number.isFinite(Number(score?.total)) ? Number(score.total) : null;
   const scoreDescriptor = getScoreDescriptor(numericScore);
   const notableReviews = useMemo(
     () => selectNotableReviews(professorContext?.reviewsSample),
     [professorContext?.reviewsSample],
   );
-  const professorName = professorContext?.professorName?.trim() || "Unknown Professor";
 
   return (
     <section className="summary-page">
-      {!loadingSummary && !summaryError ? (
-        <div className="professor-display" aria-live="polite">
-          <p className="professor-display-label">Professor</p>
-          <p className="professor-display-name">{professorName}</p>
-        </div>
-      ) : null}
-
-      {selectedCourses && selectedCourses.length > 0 ? (
-        <div className="selected-courses-banner">
-          <p>
-            <strong>
-              Analyzing reviews for {selectedCourses.length} course
-              {selectedCourses.length !== 1 ? "s" : ""}:
-            </strong>
-          </p>
-          <p className="subtle">{selectedCourses.join(", ")}</p>
-        </div>
-      ) : null}
-
       {loadingSummary ? (
         <div className="status-panel" role="status" aria-live="polite">
           <Spinner />
-          <p>Generating summary, score, and context...</p>
+          <p>
+            Enriching profile... <strong>{ENRICHMENT_STAGES[loadingStageIndex]}</strong>
+          </p>
         </div>
       ) : null}
 
@@ -386,90 +454,83 @@ function Summary() {
 
       {!loadingSummary && !summaryError ? (
         <>
+          <Card title="Professor Snapshot" className="snapshot-card">
+            <div className="snapshot-grid">
+              <div>
+                <p className="snapshot-label">Name</p>
+                <p className="snapshot-value">{professor?.name || "Unknown Professor"}</p>
+              </div>
+              <div>
+                <p className="snapshot-label">School</p>
+                <p className="snapshot-value">{professor?.school || "Unknown School"}</p>
+              </div>
+              <div>
+                <p className="snapshot-label">Department</p>
+                <p className="snapshot-value">{professor?.department || "Unknown"}</p>
+              </div>
+              <div>
+                <p className="snapshot-label">Last Refreshed</p>
+                <p className="snapshot-value">
+                  {lastRefreshed
+                    ? new Date(lastRefreshed).toLocaleString()
+                    : new Date().toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {enrichmentWarning ? (
+            <div role="alert" className="status-panel status-panel--warning">
+              <p>{enrichmentWarning}</p>
+            </div>
+          ) : null}
+
+          {selectedCourses && selectedCourses.length > 0 ? (
+            <div className="selected-courses-banner">
+              <p>
+                <strong>
+                  Analyzing reviews for {selectedCourses.length} course
+                  {selectedCourses.length !== 1 ? "s" : ""}:
+                </strong>
+              </p>
+              <p className="subtle">{selectedCourses.join(", ")}</p>
+            </div>
+          ) : null}
+
           <div className="results-grid">
             <div className="results-main">
               <Card title="Summary">
                 <div className="stack">
                   <p className="summary-text">{summaryParagraph || "No summary returned."}</p>
+                  <Citations citationIds={summaryCitations} citations={citations} />
                   <p className="subtle">Reviews analyzed: {reviewsCount}</p>
                 </div>
               </Card>
 
               <Card title="Score">
-                <div className="score-card-body">
-                  <Badge tone={scoreDescriptor.tone} className="score-badge">
-                    {scoreDescriptor.label}
-                  </Badge>
-                  <p className="score-number">{numericScore ?? "--"}</p>
-                  <p className="subtle">out of 100</p>
-                  <p>{scoreExplanation || "No score explanation returned."}</p>
-                </div>
+                <Badge tone={scoreDescriptor.tone} className="score-badge">
+                  {scoreDescriptor.label}
+                </Badge>
+                <ScoreBreakdown score={score} />
+              </Card>
+
+              <Card title="Notable Achievements">
+                <Achievements achievements={achievements} citations={citations} />
               </Card>
             </div>
 
             <div className="results-side">
               <Card title="Ask about this professor" className="chat-card">
-                <div className="chat-panel">
-                  <p className="subtle">
-                    Answers are grounded only in the scraped review data and stats.
-                  </p>
-
-                  <div
-                    className="chat-messages"
-                    aria-live="polite"
-                    role="log"
-                    aria-label="Conversation history"
-                  >
-                    {chatMessages.length ? (
-                      chatMessages.map((message, index) => (
-                        <div
-                          key={`${message.role}-${index}`}
-                          className={`chat-bubble ${
-                            message.role === "user" ? "user" : "assistant"
-                          }`}
-                        >
-                          <p className="chat-role">
-                            {message.role === "user" ? "You" : "Assistant"}
-                          </p>
-                          <p>{message.content}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="chat-empty">No messages yet.</p>
-                    )}
-                  </div>
-
-                  {chatError ? (
-                    <div role="alert" className="status-panel status-panel--error">
-                      <p>{chatError}</p>
-                    </div>
-                  ) : null}
-
-                  <form className="chat-form" onSubmit={handleChatSubmit}>
-                    <Input
-                      id="chat-message-input"
-                      label="Ask a question"
-                      type="text"
-                      value={chatInput}
-                      onChange={(event) => setChatInput(event.target.value)}
-                      placeholder="Example: Is this professor a hard grader?"
-                      disabled={chatLoading || !professorContext}
-                      helperText={
-                        professorContext
-                          ? ""
-                          : "Chat becomes available after summary context is ready."
-                      }
-                    />
-
-                    <Button
-                      type="submit"
-                      loading={chatLoading}
-                      disabled={chatLoading || !professorContext || !chatInput.trim()}
-                    >
-                      {chatLoading ? "Sending..." : "Send"}
-                    </Button>
-                  </form>
-                </div>
+                <ProfessorChat
+                  messages={chatMessages}
+                  input={chatInput}
+                  onInputChange={setChatInput}
+                  onSubmit={handleChatSubmit}
+                  loading={chatLoading}
+                  error={chatError}
+                  disabled={!professor?.id}
+                  citations={citations}
+                />
               </Card>
             </div>
           </div>

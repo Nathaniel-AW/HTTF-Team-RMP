@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host localhost --port 5173 --strictPort",
-    "server": "node --env-file=.env server/index.js",
+    "server": "node --env-file=/Users/andrewngantung/Desktop/hacktothefuture2026/HTTF-Team-RMP/.env server/index.js",
     "build": "vite build",
     "start": "vite preview --host 0.0.0.0 --port 9000",
     "lint": "eslint .",

@@ -189,6 +189,12 @@ select {
   background: rgba(22, 163, 74, 0.08);
 }
 
+.status-panel--warning {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+
 .app-shell {
   min-height: 100%;
   display: flex;
@@ -659,6 +665,30 @@ select {
   gap: var(--space-2);
 }
 
+.snapshot-card .ui-card-content {
+  padding-top: 16px;
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.snapshot-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.snapshot-value {
+  margin-top: 3px;
+  color: var(--text);
+  font-weight: 600;
+}
+
 .professor-display {
   border: 1px solid rgba(5, 150, 105, 0.2);
   border-radius: var(--radius-card);
@@ -712,6 +742,42 @@ select {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+}
+
+.score-breakdown-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.score-breakdown-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 10px 12px;
+}
+
+.score-breakdown-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.score-breakdown-value {
+  margin-top: 2px;
+  color: var(--brand-700);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.score-breakdown-reason {
+  margin-top: 6px;
+  font-size: 0.82rem;
+}
+
+.score-tooltip {
+  font-size: 0.83rem;
 }
 
 .score-number {
@@ -797,6 +863,54 @@ select {
   flex: 1;
 }
 
+.citation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.citation-chip {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--brand-700);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  text-decoration: none;
+}
+
+.citation-chip:hover {
+  background: var(--brand-100);
+  text-decoration: none;
+}
+
+.chat-citations {
+  margin-top: 8px;
+}
+
+.achievements-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.achievement-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.achievement-text {
+  color: var(--text);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
 .notable-reviews-list {
   list-style: none;
   margin: 0;
@@ -877,6 +991,11 @@ select {
 
   .chat-bubble {
     max-width: 100%;
+  }
+
+  .snapshot-grid,
+  .score-breakdown-grid {
+    grid-template-columns: 1fr;
   }
 }
 
