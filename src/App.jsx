@@ -4,9 +4,6 @@ import HomePage from './pages/homepage'
 import SearchResults from './pages/searchResults.jsx'
 import './index.css'
 
-//supabase const
-import SupabaseTest from './components/SupabaseTest.jsx'
-
 function App() {
   return (
     <>
@@ -15,9 +12,8 @@ function App() {
           <Layout pageTitle="Professor Review">
             <header>
               <h1>HTTF Team RMP</h1>
-              <p>Supabase client configured; inspect the data below.</p>
+              <p>RateMyProf review summarizer</p>
             </header>
-            <SupabaseTest />
             <HomePage />
           </Layout>
         } />
