@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -7,6 +7,14 @@ import Input from "../components/ui/Input";
 import Spinner from "../components/ui/Spinner";
 
 const EMPTY_COURSES = [];
+const NOTABLE_REVIEWS_LIMIT = 4;
+const EMPTY_REVIEW_FALLBACK = "No notable written reviews available.";
+const PLACEHOLDER_REVIEW_PHRASE = "no written comment provided";
+const SENTIMENT_BADGE_TONE = {
+  Positive: "success",
+  Mixed: "warning",
+  Critical: "danger",
+};
 
 function getScoreDescriptor(score) {
   if (!Number.isFinite(score)) {
@@ -22,6 +30,123 @@ function getScoreDescriptor(score) {
   }
 
   return { label: "Low", tone: "danger" };
+}
+
+function normalizeReviewText(text) {
+  return typeof text === "string" ? text.trim() : "";
+}
+
+function toFiniteNumber(value) {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function resolveReviewSentiment(rating) {
+  if (rating === null) {
+    return "Mixed";
+  }
+
+  if (rating >= 4) {
+    return "Positive";
+  }
+
+  if (rating <= 2) {
+    return "Critical";
+  }
+
+  return "Mixed";
+}
+
+function toReviewSnippet(text, maxLength = 320) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function selectNotableReviews(reviewsSample) {
+  const sourceReviews = Array.isArray(reviewsSample) ? reviewsSample : [];
+  const seenNormalizedText = new Set();
+  const uniqueUsableReviews = [];
+
+  sourceReviews.forEach((review) => {
+    const text = normalizeReviewText(review?.text);
+    if (!text) {
+      return;
+    }
+
+    const normalizedText = text.toLowerCase();
+    if (normalizedText.includes(PLACEHOLDER_REVIEW_PHRASE)) {
+      return;
+    }
+
+    if (seenNormalizedText.has(normalizedText)) {
+      return;
+    }
+    seenNormalizedText.add(normalizedText);
+
+    const rating = toFiniteNumber(review?.rating);
+    uniqueUsableReviews.push({
+      id: `notable-review-${uniqueUsableReviews.length}`,
+      order: uniqueUsableReviews.length,
+      sentiment: resolveReviewSentiment(rating),
+      rating,
+      date: normalizeReviewText(review?.date),
+      text,
+      snippet: toReviewSnippet(text),
+    });
+  });
+
+  if (!uniqueUsableReviews.length) {
+    return [];
+  }
+
+  const buckets = {
+    Positive: [],
+    Critical: [],
+    Mixed: [],
+  };
+
+  uniqueUsableReviews.forEach((review) => {
+    buckets[review.sentiment].push(review);
+  });
+
+  const selected = [];
+  const selectedIds = new Set();
+
+  ["Positive", "Critical", "Mixed"].forEach((sentiment) => {
+    const firstInBucket = buckets[sentiment][0];
+    if (!firstInBucket) {
+      return;
+    }
+    selected.push(firstInBucket);
+    selectedIds.add(firstInBucket.id);
+  });
+
+  if (selected.length < NOTABLE_REVIEWS_LIMIT) {
+    const remaining = uniqueUsableReviews
+      .filter((review) => !selectedIds.has(review.id))
+      .sort((a, b) => {
+        const byLength = b.text.length - a.text.length;
+        if (byLength !== 0) {
+          return byLength;
+        }
+        return a.order - b.order;
+      });
+
+    selected.push(...remaining);
+  }
+
+  return selected.slice(0, NOTABLE_REVIEWS_LIMIT);
+}
+
+function formatRating(rating) {
+  if (rating === null) {
+    return null;
+  }
+
+  return Number.isInteger(rating) ? `${rating}/5` : `${rating.toFixed(1)}/5`;
 }
 
 function Summary() {
@@ -219,6 +344,10 @@ function Summary() {
   }
 
   const scoreDescriptor = getScoreDescriptor(numericScore);
+  const notableReviews = useMemo(
+    () => selectNotableReviews(professorContext?.reviewsSample),
+    [professorContext?.reviewsSample],
+  );
 
   return (
     <section className="summary-page">
@@ -248,87 +377,118 @@ function Summary() {
       ) : null}
 
       {!loadingSummary && !summaryError ? (
-        <div className="results-grid">
-          <Card title="Summary">
-            <div className="stack">
-              <p className="summary-text">{summaryParagraph || "No summary returned."}</p>
-              <p className="subtle">Reviews analyzed: {reviewsCount}</p>
-            </div>
-          </Card>
-
-          <div className="results-side">
-            <Card title="Score">
-              <div className="score-card-body">
-                <Badge tone={scoreDescriptor.tone}>{scoreDescriptor.label}</Badge>
-                <p className="score-number">{numericScore ?? "--"}</p>
-                <p className="subtle">out of 100</p>
-                <p>{scoreExplanation || "No score explanation returned."}</p>
+        <>
+          <div className="results-grid">
+            <Card title="Summary">
+              <div className="stack">
+                <p className="summary-text">{summaryParagraph || "No summary returned."}</p>
+                <p className="subtle">Reviews analyzed: {reviewsCount}</p>
               </div>
             </Card>
 
-            <Card title="Ask about this professor">
-              <div className="chat-panel">
-                <p className="subtle">
-                  Answers are grounded only in the scraped review data and stats.
-                </p>
-
-                <div
-                  className="chat-messages"
-                  aria-live="polite"
-                  role="log"
-                  aria-label="Conversation history"
-                >
-                  {chatMessages.length ? (
-                    chatMessages.map((message, index) => (
-                      <div
-                        key={`${message.role}-${index}`}
-                        className={`chat-bubble ${message.role === "user" ? "user" : "assistant"}`}
-                      >
-                        <p className="chat-role">
-                          {message.role === "user" ? "You" : "Assistant"}
-                        </p>
-                        <p>{message.content}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="chat-empty">No messages yet.</p>
-                  )}
+            <div className="results-side">
+              <Card title="Score">
+                <div className="score-card-body">
+                  <Badge tone={scoreDescriptor.tone}>{scoreDescriptor.label}</Badge>
+                  <p className="score-number">{numericScore ?? "--"}</p>
+                  <p className="subtle">out of 100</p>
+                  <p>{scoreExplanation || "No score explanation returned."}</p>
                 </div>
+              </Card>
 
-                {chatError ? (
-                  <div role="alert" className="status-panel status-panel--error">
-                    <p>{chatError}</p>
-                  </div>
-                ) : null}
+              <Card title="Ask about this professor">
+                <div className="chat-panel">
+                  <p className="subtle">
+                    Answers are grounded only in the scraped review data and stats.
+                  </p>
 
-                <form className="chat-form" onSubmit={handleChatSubmit}>
-                  <Input
-                    id="chat-message-input"
-                    label="Ask a question"
-                    type="text"
-                    value={chatInput}
-                    onChange={(event) => setChatInput(event.target.value)}
-                    placeholder="Example: Is this professor a hard grader?"
-                    disabled={chatLoading || !professorContext}
-                    helperText={
-                      professorContext
-                        ? ""
-                        : "Chat becomes available after summary context is ready."
-                    }
-                  />
-
-                  <Button
-                    type="submit"
-                    loading={chatLoading}
-                    disabled={chatLoading || !professorContext || !chatInput.trim()}
+                  <div
+                    className="chat-messages"
+                    aria-live="polite"
+                    role="log"
+                    aria-label="Conversation history"
                   >
-                    {chatLoading ? "Sending..." : "Send"}
-                  </Button>
-                </form>
-              </div>
-            </Card>
+                    {chatMessages.length ? (
+                      chatMessages.map((message, index) => (
+                        <div
+                          key={`${message.role}-${index}`}
+                          className={`chat-bubble ${
+                            message.role === "user" ? "user" : "assistant"
+                          }`}
+                        >
+                          <p className="chat-role">
+                            {message.role === "user" ? "You" : "Assistant"}
+                          </p>
+                          <p>{message.content}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="chat-empty">No messages yet.</p>
+                    )}
+                  </div>
+
+                  {chatError ? (
+                    <div role="alert" className="status-panel status-panel--error">
+                      <p>{chatError}</p>
+                    </div>
+                  ) : null}
+
+                  <form className="chat-form" onSubmit={handleChatSubmit}>
+                    <Input
+                      id="chat-message-input"
+                      label="Ask a question"
+                      type="text"
+                      value={chatInput}
+                      onChange={(event) => setChatInput(event.target.value)}
+                      placeholder="Example: Is this professor a hard grader?"
+                      disabled={chatLoading || !professorContext}
+                      helperText={
+                        professorContext
+                          ? ""
+                          : "Chat becomes available after summary context is ready."
+                      }
+                    />
+
+                    <Button
+                      type="submit"
+                      loading={chatLoading}
+                      disabled={chatLoading || !professorContext || !chatInput.trim()}
+                    >
+                      {chatLoading ? "Sending..." : "Send"}
+                    </Button>
+                  </form>
+                </div>
+              </Card>
+            </div>
           </div>
-        </div>
+
+          <Card title="Notable Reviews">
+            {notableReviews.length ? (
+              <ul className="notable-reviews-list">
+                {notableReviews.map((review) => {
+                  const metadata = [
+                    review.rating === null ? null : `Rating: ${formatRating(review.rating)}`,
+                    review.date || null,
+                  ].filter(Boolean);
+
+                  return (
+                    <li key={review.id} className="notable-review-item">
+                      <Badge tone={SENTIMENT_BADGE_TONE[review.sentiment]}>
+                        {review.sentiment}
+                      </Badge>
+                      {metadata.length ? (
+                        <p className="notable-review-meta">{metadata.join(" • ")}</p>
+                      ) : null}
+                      <p className="notable-review-text">{review.snippet}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="subtle">{EMPTY_REVIEW_FALLBACK}</p>
+            )}
+          </Card>
+        </>
       ) : null}
 
       <div className="row">
