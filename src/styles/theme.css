@@ -38,6 +38,17 @@
 * {
   box-sizing: border-box;
 }
+img{
+  display: block;
+  max-width: 100px;
+  height: auto;
+}
+
+.brand-container {
+  display: flex;
+  align-items: center;   /* vertically aligns them */
+  gap: 8px;              /* space between logo and text */
+}
 
 html,
 body,

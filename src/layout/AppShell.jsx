@@ -7,9 +7,12 @@ function AppShell({ children }) {
     <div className="app-shell page">
       <header className="app-nav">
         <div className="container app-nav-inner">
-          <Link to="/" className="app-brand">
-            FutureScore
-          </Link>
+          <div className="brand-container">
+            <img src="./src/img/ProfInsights.png" alt="FutureScore Logo" className="app-logo" /> 
+            <Link to="/" className="app-brand">
+              FutureScore
+            </Link>
+          </div>
 
           <nav className="app-nav-links" aria-label="Primary">
             <Link to="/endScore" className="app-nav-link">
