@@ -1,10 +1,33 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import Spinner from "../components/ui/Spinner";
+
+const EMPTY_COURSES = [];
+
+function getScoreDescriptor(score) {
+  if (!Number.isFinite(score)) {
+    return { label: "Pending", tone: "neutral" };
+  }
+
+  if (score >= 75) {
+    return { label: "High", tone: "success" };
+  }
+
+  if (score >= 50) {
+    return { label: "Medium", tone: "warning" };
+  }
+
+  return { label: "Low", tone: "danger" };
+}
 
 function Summary() {
   const location = useLocation();
   const rmpUrl = location.state?.rmpUrl ?? "";
-  const selectedCourses = location.state?.selectedCourses ?? [];
+  const selectedCourses = location.state?.selectedCourses ?? EMPTY_COURSES;
 
   const [summaryParagraph, setSummaryParagraph] = useState("");
   const [numericScore, setNumericScore] = useState(null);
@@ -195,94 +218,128 @@ function Summary() {
     }
   }
 
-  return (
-    <section className="container summary-container">
-      <h2>Summary</h2>
+  const scoreDescriptor = getScoreDescriptor(numericScore);
 
+  return (
+    <section className="summary-page">
       {selectedCourses && selectedCourses.length > 0 ? (
-        <div style={{ marginBottom: "20px", padding: "10px", backgroundColor: "#f0f8ff", borderRadius: "4px" }}>
-          <p style={{ margin: "0 0 8px 0", fontWeight: "bold" }}>
-            Analyzing reviews for {selectedCourses.length} course{selectedCourses.length !== 1 ? "s" : ""}:
+        <div className="selected-courses-banner">
+          <p>
+            <strong>
+              Analyzing reviews for {selectedCourses.length} course
+              {selectedCourses.length !== 1 ? "s" : ""}:
+            </strong>
           </p>
-          <p style={{ margin: 0 }}>
-            {selectedCourses.join(", ")}
-          </p>
+          <p className="subtle">{selectedCourses.join(", ")}</p>
         </div>
       ) : null}
 
-      {loadingSummary ? <p>Generating summary, score, and context...</p> : null}
+      {loadingSummary ? (
+        <div className="status-panel" role="status" aria-live="polite">
+          <Spinner />
+          <p>Generating summary, score, and context...</p>
+        </div>
+      ) : null}
 
-      {!loadingSummary && summaryError ? <p role="alert">{summaryError}</p> : null}
+      {!loadingSummary && summaryError ? (
+        <div role="alert" className="status-panel status-panel--error">
+          <p>{summaryError}</p>
+        </div>
+      ) : null}
 
       {!loadingSummary && !summaryError ? (
-        <div className="results-stack">
-          <article className="result-card">
-            <h3>One-Paragraph Summary</h3>
-            <p>{summaryParagraph || "No summary returned."}</p>
-            <p className="meta-text">Reviews analyzed: {reviewsCount}</p>
-          </article>
-
-          <article className="result-card score-card">
-            <h3>Student Usefulness Score</h3>
-            <p className="score-number">{numericScore ?? "--"}</p>
-            <p className="score-scale">out of 100</p>
-            <p>{scoreExplanation || "No score explanation returned."}</p>
-          </article>
-
-          <article className="result-card chat-card">
-            <h3>Ask About This Professor</h3>
-            <p className="meta-text">
-              Answers are grounded only in the scraped review data and stats.
-            </p>
-
-            <div className="chat-messages" aria-live="polite">
-              {chatMessages.length ? (
-                chatMessages.map((message, index) => (
-                  <div
-                    key={`${message.role}-${index}`}
-                    className={`chat-message ${
-                      message.role === "user" ? "chat-user" : "chat-assistant"
-                    }`}
-                  >
-                    <p className="chat-role">
-                      {message.role === "user" ? "You" : "Assistant"}
-                    </p>
-                    <p>{message.content}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="chat-empty">No messages yet.</p>
-              )}
+        <div className="results-grid">
+          <Card title="Summary">
+            <div className="stack">
+              <p className="summary-text">{summaryParagraph || "No summary returned."}</p>
+              <p className="subtle">Reviews analyzed: {reviewsCount}</p>
             </div>
+          </Card>
 
-            {chatError ? (
-              <p role="alert" className="chat-error">
-                {chatError}
-              </p>
-            ) : null}
+          <div className="results-side">
+            <Card title="Score">
+              <div className="score-card-body">
+                <Badge tone={scoreDescriptor.tone}>{scoreDescriptor.label}</Badge>
+                <p className="score-number">{numericScore ?? "--"}</p>
+                <p className="subtle">out of 100</p>
+                <p>{scoreExplanation || "No score explanation returned."}</p>
+              </div>
+            </Card>
 
-            <form className="chat-input-row" onSubmit={handleChatSubmit}>
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(event) => setChatInput(event.target.value)}
-                placeholder="Example: Is this professor a hard grader?"
-                disabled={chatLoading || !professorContext}
-              />
-              <button
-                type="submit"
-                disabled={chatLoading || !professorContext || !chatInput.trim()}
-              >
-                {chatLoading ? "Sending..." : "Send"}
-              </button>
-            </form>
-          </article>
+            <Card title="Ask about this professor">
+              <div className="chat-panel">
+                <p className="subtle">
+                  Answers are grounded only in the scraped review data and stats.
+                </p>
+
+                <div
+                  className="chat-messages"
+                  aria-live="polite"
+                  role="log"
+                  aria-label="Conversation history"
+                >
+                  {chatMessages.length ? (
+                    chatMessages.map((message, index) => (
+                      <div
+                        key={`${message.role}-${index}`}
+                        className={`chat-bubble ${message.role === "user" ? "user" : "assistant"}`}
+                      >
+                        <p className="chat-role">
+                          {message.role === "user" ? "You" : "Assistant"}
+                        </p>
+                        <p>{message.content}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="chat-empty">No messages yet.</p>
+                  )}
+                </div>
+
+                {chatError ? (
+                  <div role="alert" className="status-panel status-panel--error">
+                    <p>{chatError}</p>
+                  </div>
+                ) : null}
+
+                <form className="chat-form" onSubmit={handleChatSubmit}>
+                  <Input
+                    id="chat-message-input"
+                    label="Ask a question"
+                    type="text"
+                    value={chatInput}
+                    onChange={(event) => setChatInput(event.target.value)}
+                    placeholder="Example: Is this professor a hard grader?"
+                    disabled={chatLoading || !professorContext}
+                    helperText={
+                      professorContext
+                        ? ""
+                        : "Chat becomes available after summary context is ready."
+                    }
+                  />
+
+                  <Button
+                    type="submit"
+                    loading={chatLoading}
+                    disabled={chatLoading || !professorContext || !chatInput.trim()}
+                  >
+                    {chatLoading ? "Sending..." : "Send"}
+                  </Button>
+                </form>
+              </div>
+            </Card>
+          </div>
         </div>
       ) : null}
 
-      <Link to="/endScore" aria-label="Go back to input another URL">
-        <button type="button" className="result-button">Try Another Professor</button>
-      </Link>
+      <div className="row">
+        <Link
+          to="/endScore"
+          aria-label="Go back to input another URL"
+          className="ui-button ui-button--secondary ui-button--md"
+        >
+          Try Another Professor
+        </Link>
+      </div>
     </section>
   );
 }

@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
 
 const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
 
@@ -53,21 +56,35 @@ function EndScore() {
     }
 
     return (
-        <>
-            <div>
-                <p>RateMyProfessors professor URL:</p>
-                <input
-                    type="text"
-                    value={rmpUrl}
-                    onChange={(event) => setRmpUrl(event.target.value)}
-                    placeholder="https://www.ratemyprofessors.com/professor/123456"
-                    />
-                {validationError ? <p role="alert">{validationError}</p> : null}
-            </div>
-            <div>
-                <button type="button" onClick={handleGenerateSummary}>Generate Summary</button>
-            </div>
-        </>
+        <section className="intake-page">
+            <Card className="intake-card" title="Analyze a professor">
+                <div className="stack">
+                    <p className="subtle">
+                        Paste a RateMyProfessor professor URL to generate a summary, score, and chat-ready context.
+                    </p>
+
+                    <form
+                        className="intake-form-row"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            handleGenerateSummary();
+                        }}
+                    >
+                        <Input
+                            id="rmp-url-input"
+                            label="RateMyProfessor URL"
+                            type="text"
+                            value={rmpUrl}
+                            onChange={(event) => setRmpUrl(event.target.value)}
+                            placeholder="https://www.ratemyprofessors.com/professor/123456"
+                            helperText="Paste a valid professor URL."
+                            error={validationError}
+                        />
+                        <Button type="submit">Generate Summary</Button>
+                    </form>
+                </div>
+            </Card>
+        </section>
     )
 }
 

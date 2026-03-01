@@ -1,37 +1,46 @@
 import { Routes, Route } from 'react-router'
-import Layout from './components/Layout copy'
+import AppShell from './layout/AppShell'
 import HomePage from './pages/homepage'
 import EndScore from './pages/endScore.jsx'
 import CourseSelection from './pages/courseSelection.jsx'
 import Summary from './pages/summary.jsx'
-import './index.css'
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={
-          <Layout pageTitle="AI-Powered Professor Feedback & Course Preparation Web App">
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <AppShell>
             <HomePage />
-          </Layout>
-        } />
-        <Route path="/endScore" element={
-            <Layout pageTitle="Final Score">
-              <EndScore />
-            </Layout>
-        } />
-        <Route path="/courseSelection" element={
-            <Layout pageTitle="Select Courses">
-              <CourseSelection />
-            </Layout>
-        } />
-        <Route path="/summary" element={
-            <Layout pageTitle="Summary">
-              <Summary />
-            </Layout>
-        } />
-      </Routes>
-    </>
+          </AppShell>
+        }
+      />
+      <Route
+        path="/endScore"
+        element={
+          <AppShell>
+            <EndScore />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/courseSelection"
+        element={
+          <AppShell>
+            <CourseSelection />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/summary"
+        element={
+          <AppShell>
+            <Summary />
+          </AppShell>
+        }
+      />
+    </Routes>
   )
 }
 

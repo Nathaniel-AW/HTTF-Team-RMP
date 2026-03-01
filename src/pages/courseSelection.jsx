@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Spinner from "../components/ui/Spinner";
 
 function CourseSelection() {
   const location = useLocation();
@@ -46,11 +49,11 @@ function CourseSelection() {
 
         const coursesArray = data.courses || [];
         setCourses(coursesArray);
-        
+
         // Select all courses by default
         setSelectedCourses(new Set(coursesArray));
-      } catch (error) {
-        setError(error.message || "Unable to fetch courses");
+      } catch (fetchError) {
+        setError(fetchError.message || "Unable to fetch courses");
       } finally {
         setLoading(false);
       }
@@ -91,108 +94,133 @@ function CourseSelection() {
     });
   }
 
-  if (error && !rmpUrl) {
+  if (loading) {
     return (
-      <div>
-        <p role="alert" style={{ color: "red" }}>{error}</p>
-        <button onClick={() => navigate("/endScore")}>Go Back</button>
-      </div>
+      <section className="course-page">
+        <Card title="Select Courses to Analyze">
+          <div className="status-panel" role="status" aria-live="polite">
+            <Spinner />
+            <p>Loading courses...</p>
+          </div>
+        </Card>
+      </section>
     );
   }
 
-  if (loading) {
-    return <p>Loading courses...</p>;
+  if (error && !rmpUrl) {
+    return (
+      <section className="course-page">
+        <Card title="Course selection unavailable">
+          <div className="stack">
+            <div role="alert" className="status-panel status-panel--error">
+              <p>{error}</p>
+            </div>
+            <div className="row">
+              <Button type="button" onClick={() => navigate("/endScore")}>
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </section>
+    );
   }
 
   if (error) {
     return (
-      <div>
-        <p role="alert" style={{ color: "red" }}>{error}</p>
-        <button onClick={() => navigate("/endScore")}>Go Back</button>
-      </div>
+      <section className="course-page">
+        <Card title="Unable to load courses">
+          <div className="stack">
+            <div role="alert" className="status-panel status-panel--error">
+              <p>{error}</p>
+            </div>
+            <div className="row">
+              <Button type="button" onClick={() => navigate("/endScore")}>
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </section>
     );
   }
 
   if (courses.length === 0) {
     return (
-      <div>
-        <p>No courses found for this professor.</p>
-        <button onClick={() => navigate("/endScore")}>Go Back</button>
-      </div>
+      <section className="course-page">
+        <Card title="No courses found">
+          <div className="stack">
+            <p className="subtle">No courses were found for this professor.</p>
+            <div className="row">
+              <Button type="button" onClick={() => navigate("/endScore")}>
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </section>
     );
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h2>Select Courses to Analyze</h2>
-      <p>Choose which courses you want to include in the review summary and analysis:</p>
+    <section className="course-page stack">
+      <Card title="Select Courses to Analyze">
+        <div className="stack">
+          <p className="subtle">
+            Choose which courses you want to include in the review summary and analysis.
+          </p>
 
-      <div style={{ marginBottom: "20px" }}>
-        <button onClick={selectAll} style={{ marginRight: "10px" }}>
-          Select All
-        </button>
-        <button onClick={deselectAll}>Deselect All</button>
-      </div>
+          <div className="row">
+            <Button type="button" size="sm" variant="secondary" onClick={selectAll}>
+              Select All
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={deselectAll}>
+              Deselect All
+            </Button>
+            <span className="course-count">
+              Selected: {selectedCourses.size} of {courses.length}
+            </span>
+          </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-          gap: "10px",
-          marginBottom: "20px",
-        }}
-      >
-        {courses.map((course) => (
-          <label
-            key={course}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              cursor: "pointer",
-              backgroundColor: selectedCourses.has(course) ? "#e0f0ff" : "#fff",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={selectedCourses.has(course)}
-              onChange={() => toggleCourse(course)}
-              style={{ marginRight: "8px" }}
-            />
-            <span>{course}</span>
-          </label>
-        ))}
-      </div>
+          <div className="course-grid">
+            {courses.map((course) => {
+              const isSelected = selectedCourses.has(course);
 
-      <div style={{ marginTop: "20px" }}>
-        <p>
-          <strong>Selected: {selectedCourses.size}</strong> of {courses.length} courses
-        </p>
-      </div>
+              return (
+                <label
+                  key={course}
+                  className={`course-item${isSelected ? " is-selected" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleCourse(course)}
+                  />
+                  <span>{course}</span>
+                </label>
+              );
+            })}
+          </div>
 
-      <div style={{ marginTop: "20px" }}>
-        <button
-          onClick={handleContinue}
-          disabled={selectedCourses.size === 0}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: selectedCourses.size === 0 ? "not-allowed" : "pointer",
-            opacity: selectedCourses.size === 0 ? 0.5 : 1,
-          }}
-        >
-          Continue to Summary
-        </button>
-        <button
-          onClick={() => navigate("/endScore")}
-          style={{ marginLeft: "10px", padding: "10px 20px", fontSize: "16px" }}
-        >
-          Go Back
-        </button>
-      </div>
-    </div>
+          <div className="row">
+            <Button
+              type="button"
+              onClick={handleContinue}
+              disabled={selectedCourses.size === 0}
+            >
+              Continue to Summary
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate("/endScore")}
+            >
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </section>
   );
 }
 
