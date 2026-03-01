@@ -10,7 +10,7 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={
-          <Layout pageTitle="Professor Review">
+          <Layout pageTitle="AI-Powered Professor Feedback & Course Preparation Web App">
             <HomePage />
           </Layout>
         } />

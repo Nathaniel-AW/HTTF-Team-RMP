@@ -8,7 +8,7 @@ function Layout({ children, pageTitle, pageSubtitle }) {
                 position: 'sticky', 
                 top: 0, 
                 zIndex: 100,
-                backgroundColor: '#4a6fa5', // Match your header color
+                backgroundColor: 'transparent',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
                 <Header title={pageTitle} subtitle={pageSubtitle} />

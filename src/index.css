@@ -23,17 +23,21 @@ box-sizing: border-box;
 margin: 0;
 padding: 0;
 }
-html {
+html, body, #root {
+    margin: 0;
+    padding: 0;
     height: 100%;
     width: 100%;
+    background: #1f1c4d;
+}
+html {
     scroll-behavior: smooth;
     scroll-padding-top: 80px;
 }
 body {
-    margin: 0;
     font-size: 16px;
     font-family: var(--font-main);
-    background-color: #f9f9f9;
+    background-color: transparent;
     color: var(--text);
     line-height: 1.6;
     padding-bottom: 0px;
@@ -82,7 +86,7 @@ p {
 /* === HEADER === */
 header {
     padding: 2rem 1rem;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    background: transparent; /* make navbar/header transparent */
     color: white;
     margin-bottom: 2rem;
     box-shadow: 0 4px 12px var(--shadow);
@@ -316,4 +320,184 @@ button:hover {
     overflow: hidden;
     clip: rect(0,0,0,0);
     border: 0;
+}
+
+/* homepage landing styles */
+.homepage-landing {
+    text-align: center;
+    padding: 2rem;
+}
+
+.hero {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1f1c4d 0%, #2a2172 60%, #3b2f80 100%);
+    z-index: 1;
+    color: white;
+    overflow: hidden;
+}
+
+/* subtle decorative pattern on outer areas */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 0%, transparent 60%),
+                      radial-gradient(circle at 80% 80%, rgba(0,0,0,0.1) 0%, transparent 70%),
+                      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 80%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='50' cy='30' r='1'/%3E%3Ccircle cx='90' cy='70' r='1.5'/%3E%3Ccircle cx='130' cy='130' r='1'/%3E%3Ccircle cx='170' cy='170' r='2'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* floating blob animations */
+.blobs {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.blob {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.05);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    animation: float 12s infinite;
+}
+.blob:nth-child(1) { top: 8%; left: 15%; width:50px; height:50px; animation-duration: 14s; }
+.blob:nth-child(2) { top: 20%; left: 75%; width:90px; height:90px; animation-duration: 12s; }
+.blob:nth-child(3) { top: 55%; left: 30%; width:40px; height:40px; animation-duration: 10s; }
+.blob:nth-child(4) { top: 70%; left: 85%; width:60px; height:60px; animation-duration: 16s; }
+.blob:nth-child(5) { top: 40%; left: 50%; width:120px; height:120px; animation-duration: 18s; }
+.blob:nth-child(6) { top: 90%; left: 20%; width:80px; height:80px; animation-duration: 13s; }
+.blob:nth-child(7) { top: 25%; left: 10%; width:70px; height:70px; animation-duration: 11s; }
+.blob:nth-child(8) { top: 60%; left: 60%; width:100px; height:100px; animation-duration: 15s; }
+.blob:nth-child(9) { top: 15%; left: 40%; width:60px; height:60px; animation-duration: 14s; }
+.blob:nth-child(10) { top: 80%; left: 70%; width:50px; height:50px; animation-duration: 12s; }
+.blob:nth-child(11) { top: 50%; left: 20%; width:60px; height:60px; animation-duration: 13s; }
+.blob:nth-child(12) { top: 10%; left: 50%; width:80px; height:80px; animation-duration: 17s; }
+.blob:nth-child(13) { top: 35%; left: 80%; width:55px; height:55px; animation-duration: 14s; }
+.blob:nth-child(14) { top: 75%; left: 35%; width:65px; height:65px; animation-duration: 16s; }
+.blob:nth-child(15) { top: 85%; left: 55%; width:45px; height:45px; animation-duration: 12s; }
+
+@keyframes float {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.05); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+/* button glow tweak */
+.role-buttons button:hover {
+    transform: scale(1.07);
+    box-shadow: 0 0 30px rgba(106,76,255,0.7), 0 0 18px rgba(0, 200, 255, 0.5);
+}
+
+.homepage-fullscreen::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(58,46,166,0.5) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    filter: blur(150px);
+    pointer-events: none;
+}
+
+.homepage-content {
+    position: relative;
+    text-align: center;
+    z-index: 1;
+}
+
+.role-buttons {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+}
+
+.role-buttons button {
+    flex: 1; /* equal width for both buttons */
+    border-radius: 16px;
+    padding: 1rem 2rem;          /* slightly less empty space horizontally */
+    font-size: 1.6rem;           /* larger, more proportional text */
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    min-width: 240px;
+    max-width: 320px;            /* keep them from stretching too far */
+}
+
+.role-buttons button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(106,76,255,0.6), 0 0 10px rgba(0, 200, 255, 0.4);
+}
+
+.role-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 2;
+}
+
+.role-text {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.role-subtitle {
+    color: rgba(255,255,255,0.8);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.role-buttons .primary {
+    background: #6a4cff;
+    border: 2px solid #6a4cff;
+}
+
+.role-buttons .secondary {
+    background: #1A00FF;
+    border: 2px solid #1A00FF;
+    /* match primary button style but in blue */
+}
+
+.role-buttons .secondary:hover {
+    background: #1500cc;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
