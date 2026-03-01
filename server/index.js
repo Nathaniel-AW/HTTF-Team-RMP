@@ -4,7 +4,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
-
+import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -33,8 +33,19 @@ app.post("/api/reviews/summary", async (req, res) => {
   }
 
   try {
-    const { reviews } = await runScraper(normalizedUrl);
-    if (!reviews.length) {
+    // Extract professor ID from URL
+    const professorId = normalizedUrl.split('/').pop();
+    
+    // Check for cached reviews from local file first
+    let reviews = await getReviewsFromLocalFile(professorId);
+    
+    // If not found locally, run the scraper
+    if (!reviews) {
+      const { reviews: scrapedReviews } = await runScraper(normalizedUrl);
+      reviews = scrapedReviews;
+    }
+    
+    if (!reviews?.length) {
       return res.status(404).json({ error: "No reviews found for that professor" });
     }
 
@@ -82,6 +93,34 @@ function normalizeRateMyProfUrl(value) {
 
 const port = process.env.PORT ?? 4000;
 app.listen(port);
+
+async function getReviewsFromLocalFile(professorId) {
+  const filePath = path.join(__dirname, "..", "professor data", `${professorId}.csv`);
+  try {
+    const csvContent = await fs.readFile(filePath, 'utf-8');
+    const lines = csvContent.trim().split('\n');
+    
+    if (lines.length < 2) return null; // Header only
+    
+    // Parse CSV header
+    const headers = lines[0].split(',').map(h => h.trim());
+    const reviews = [];
+    
+    // Parse data rows
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim());
+      const review = {};
+      headers.forEach((header, idx) => {
+        review[header] = values[idx] || null;
+      });
+      reviews.push(review);
+    }
+    
+    return reviews.length > 0 ? reviews : null;
+  } catch (err) {
+    return null; // File doesn't exist or error reading
+  }
+}
 
 function runScraper(url) {
   return new Promise((resolve, reject) => {
