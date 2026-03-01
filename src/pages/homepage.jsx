@@ -73,8 +73,12 @@ function HomePage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url: normalizedUrl }),
             });
-
-            const data = await response.json();
+            let data = {};
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
 
             if (!response.ok) {
                 const errorMessage = data?.details
@@ -86,7 +90,16 @@ function HomePage() {
             setSummary(data.summary ?? "");
             setReviewsCount(data.reviewsCount ?? 0);
         } catch (error) {
-            setSummaryError(error instanceof Error ? error.message : "Something went wrong.");
+            const message = error instanceof Error ? error.message : "";
+            const isNetworkFailure =
+                message === "Failed to fetch" ||
+                message === "Load failed" ||
+                message.includes("NetworkError");
+            setSummaryError(
+                isNetworkFailure
+                    ? "Cannot reach the API server. Start `npm run server` and keep it running, then try again."
+                    : (message || "Something went wrong.")
+            );
         } finally {
             setLoadingSummary(false);
         }
