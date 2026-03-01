@@ -13,7 +13,7 @@ function Input({
   const inputId = id || autoId;
 
   const rootClassName = ["ui-input-group", className].filter(Boolean).join(" ");
-  const fieldClassName = ["ui-input", error ? "ui-input--error" : "", inputClassName]
+  const fieldClassName = ["ui-input", "input", error ? "ui-input--error" : "", inputClassName]
     .filter(Boolean)
     .join(" ");
 

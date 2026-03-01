@@ -348,9 +348,17 @@ function Summary() {
     () => selectNotableReviews(professorContext?.reviewsSample),
     [professorContext?.reviewsSample],
   );
+  const professorName = professorContext?.professorName?.trim() || "Unknown Professor";
 
   return (
     <section className="summary-page">
+      {!loadingSummary && !summaryError ? (
+        <div className="professor-display" aria-live="polite">
+          <p className="professor-display-label">Professor</p>
+          <p className="professor-display-name">{professorName}</p>
+        </div>
+      ) : null}
+
       {selectedCourses && selectedCourses.length > 0 ? (
         <div className="selected-courses-banner">
           <p>
@@ -379,24 +387,28 @@ function Summary() {
       {!loadingSummary && !summaryError ? (
         <>
           <div className="results-grid">
-            <Card title="Summary">
-              <div className="stack">
-                <p className="summary-text">{summaryParagraph || "No summary returned."}</p>
-                <p className="subtle">Reviews analyzed: {reviewsCount}</p>
-              </div>
-            </Card>
+            <div className="results-main">
+              <Card title="Summary">
+                <div className="stack">
+                  <p className="summary-text">{summaryParagraph || "No summary returned."}</p>
+                  <p className="subtle">Reviews analyzed: {reviewsCount}</p>
+                </div>
+              </Card>
 
-            <div className="results-side">
               <Card title="Score">
                 <div className="score-card-body">
-                  <Badge tone={scoreDescriptor.tone}>{scoreDescriptor.label}</Badge>
+                  <Badge tone={scoreDescriptor.tone} className="score-badge">
+                    {scoreDescriptor.label}
+                  </Badge>
                   <p className="score-number">{numericScore ?? "--"}</p>
                   <p className="subtle">out of 100</p>
                   <p>{scoreExplanation || "No score explanation returned."}</p>
                 </div>
               </Card>
+            </div>
 
-              <Card title="Ask about this professor">
+            <div className="results-side">
+              <Card title="Ask about this professor" className="chat-card">
                 <div className="chat-panel">
                   <p className="subtle">
                     Answers are grounded only in the scraped review data and stats.

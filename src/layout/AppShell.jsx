@@ -4,7 +4,7 @@ function AppShell({ children }) {
   const year = new Date().getFullYear();
 
   return (
-    <div className="app-shell">
+    <div className="app-shell page">
       <header className="app-nav">
         <div className="container app-nav-inner">
           <Link to="/" className="app-brand">

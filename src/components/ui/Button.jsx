@@ -17,8 +17,11 @@ function Button({
 
   const buttonClassName = [
     "ui-button",
+    "btn",
     `ui-button--${resolvedVariant}`,
+    `btn-${resolvedVariant}`,
     `ui-button--${resolvedSize}`,
+    `btn-${resolvedSize}`,
     className,
   ]
     .filter(Boolean)

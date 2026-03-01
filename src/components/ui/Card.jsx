@@ -1,5 +1,5 @@
 function Card({ title, actions, className = "", children }) {
-  const cardClassName = ["ui-card", className].filter(Boolean).join(" ");
+  const cardClassName = ["ui-card", "card", className].filter(Boolean).join(" ");
 
   return (
     <section className={cardClassName}>
