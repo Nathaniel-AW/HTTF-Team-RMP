@@ -3,12 +3,20 @@ import Layout from './components/Layout copy'
 import HomePage from './pages/homepage'
 import './index.css'
 
+//supabase const
+import SupabaseTest from './components/SupabaseTest.jsx'
+
 function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={
           <Layout pageTitle="Hello">
+            <header>
+              <h1>HTTF Team RMP</h1>
+              <p>Supabase client configured; inspect the data below.</p>
+            </header>
+            <SupabaseTest />
             <HomePage />
           </Layout>
         } />
