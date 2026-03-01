@@ -21,6 +21,13 @@ const MAX_CONTEXT_REVIEWS = 60;
 const MAX_REVIEW_TEXT_CHARS = 800;
 const MAX_PROMPT_REVIEW_TEXT_CHARS = 420;
 
+function isAllowedRateMyProfessorsHost(hostname) {
+  return (
+    hostname === "ratemyprofessors.com" ||
+    hostname.endsWith(".ratemyprofessors.com")
+  );
+}
+
 app.post(["/api/reviews/summary", "/api/summarize"], async (req, res) => {
   const normalizedUrl = normalizeRateMyProfUrl(
     req.body?.professorUrl ?? req.body?.url ?? "",
@@ -149,9 +156,7 @@ function normalizeRateMyProfUrl(value) {
   }
 
   const hostname = parsed.hostname.toLowerCase();
-  const isAllowedHost =
-    hostname === "ratemyprofessors.com" ||
-    hostname === "www.ratemyprofessors.com";
+  const isAllowedHost = isAllowedRateMyProfessorsHost(hostname);
   if (!isAllowedHost) {
     return null;
   }

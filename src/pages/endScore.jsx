@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 
 const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
 
+function isAllowedRateMyProfessorsHost(hostname) {
+    return (
+        hostname === "ratemyprofessors.com" ||
+        hostname.endsWith(".ratemyprofessors.com")
+    );
+}
+
 function normalizeRateMyProfUrl(value) {
     if (!value) {
         return null;
@@ -22,7 +29,7 @@ function normalizeRateMyProfUrl(value) {
     }
 
     const hostname = parsed.hostname.toLowerCase();
-    if (!hostname.endsWith("ratemyprofessors.com")) {
+    if (!isAllowedRateMyProfessorsHost(hostname)) {
         return null;
     }
 
