@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node --env-file=.env server/index.js",
     "build": "vite build",
     "start": "vite preview --host 0.0.0.0 --port 9000",
     "lint": "eslint .",
@@ -16,7 +17,10 @@
     "express": "^5.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.13.1"
+    "react-router-dom": "^7.13.1",
+    "selenium-webdriver": "^4.41.0",
+    "cors": "^2.8.5",
+    "openai": "^4.11.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
