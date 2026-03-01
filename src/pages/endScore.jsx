@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
 
@@ -35,63 +35,21 @@ function normalizeRateMyProfUrl(value) {
 
 
 function EndScore() {
+    const navigate = useNavigate();
     const [rmpUrl, setRmpUrl] = useState("");
-    const [summary, setSummary] = useState("");
-    const [reviewsCount, setReviewsCount] = useState(0);
-    const [loadingSummary, setLoadingSummary] = useState(false);
-    const [summaryError, setSummaryError] = useState("");
+    const [validationError, setValidationError] = useState("");
 
-    async function handleGenerateSummary() {
+    function handleGenerateSummary() {
         const normalizedUrl = normalizeRateMyProfUrl(rmpUrl);
         if (!normalizedUrl) {
-            setSummaryError(
+            setValidationError(
                 "Please provide a valid RateMyProfessors professor URL (e.g., https://www.ratemyprofessors.com/professor/3126905)."
             );
             return;
         }
 
-        setRmpUrl(normalizedUrl);
-
-        setLoadingSummary(true);
-        setSummaryError("");
-        setSummary("");
-
-        try {
-            const response = await fetch("/api/reviews/summary", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: normalizedUrl }),
-            });
-            let data = {};
-            try {
-                data = await response.json();
-            } catch {
-                data = {};
-            }
-
-            if (!response.ok) {
-                const errorMessage = data?.details
-                    ? `${data.error ?? "Unable to summarize reviews."} (${data.details})`
-                    : (data.error ?? "Unable to summarize reviews.");
-                throw new Error(errorMessage);
-            }
-
-            setSummary(data.summary ?? "");
-            setReviewsCount(data.reviewsCount ?? 0);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "";
-            const isNetworkFailure =
-                message === "Failed to fetch" ||
-                message === "Load failed" ||
-                message.includes("NetworkError");
-            setSummaryError(
-                isNetworkFailure
-                    ? "Cannot reach the API server. Start `npm run server` and keep it running, then try again."
-                    : (message || "Something went wrong.")
-            );
-        } finally {
-            setLoadingSummary(false);
-        }
+        setValidationError("");
+        navigate("/summary", { state: { rmpUrl: normalizedUrl } });
     }
 
     return (
@@ -104,11 +62,10 @@ function EndScore() {
                     onChange={(event) => setRmpUrl(event.target.value)}
                     placeholder="https://www.ratemyprofessors.com/professor/123456"
                     />
+                {validationError ? <p role="alert">{validationError}</p> : null}
             </div>
             <div>
-                <Link to="/summary" aria-label="Go to summary">
-                    <button type="submit">Generating Summary</button>
-                </Link>
+                <button type="button" onClick={handleGenerateSummary}>Generate Summary</button>
             </div>
         </>
     )

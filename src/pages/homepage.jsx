@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom';
+=======
+import { useState } from "react";
+import { Link } from 'react-router-dom';
+>>>>>>> 96067a5b5d95d7a7bfcfd05370a8bfe74f4f07e5
 
 function HomePage() {
     const navigate = useNavigate();

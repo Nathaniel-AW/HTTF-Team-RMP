@@ -198,9 +198,128 @@ button:hover {
     background-color: white;
 }
 
+.summary-container {
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.results-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.result-card {
+    background: var(--light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.meta-text {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.score-card {
+    text-align: center;
+}
+
+.score-number {
+    margin: 0.5rem 0 0;
+    font-size: 3.4rem;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.score-scale {
+    margin-top: 0.15rem;
+    font-size: 0.95rem;
+    color: var(--text-light);
+}
+
+.chat-card {
+    padding-bottom: 1.25rem;
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 340px;
+    overflow-y: auto;
+    margin-top: 0.75rem;
+    padding-right: 0.25rem;
+}
+
+.chat-message {
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+}
+
+.chat-user {
+    background: #e7f0fb;
+    border: 1px solid #c8dbf4;
+}
+
+.chat-assistant {
+    background: white;
+    border: 1px solid var(--border);
+}
+
+.chat-role {
+    margin: 0 0 0.2rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--secondary);
+}
+
+.chat-empty {
+    font-size: 0.92rem;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+}
+
+.chat-input-row input {
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    cursor: text;
+}
+
+.chat-input-row button {
+    width: auto;
+    min-width: 100px;
+    white-space: nowrap;
+}
+
+.chat-error {
+    margin-top: 0.5rem;
+    color: var(--danger);
+    font-size: 0.92rem;
+}
+
 @-moz-document url-prefix() {
     html {
         scroll-behavior: smooth;
+    }
+}
+
+@media (max-width: 640px) {
+    .chat-input-row {
+        flex-direction: column;
+    }
+
+    .chat-input-row button {
+        width: 100%;
     }
 }
 
@@ -321,6 +440,7 @@ button:hover {
     clip: rect(0,0,0,0);
     border: 0;
 }
+<<<<<<< HEAD
 
 /* homepage landing styles */
 .homepage-landing {
@@ -501,3 +621,5 @@ button:hover {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+=======
+>>>>>>> 96067a5b5d95d7a7bfcfd05370a8bfe74f4f07e5
