@@ -1,0 +1,6 @@
+# Core libraries used by RMPScraper.py
+selenium
+webdriver-manager
+beautifulsoup4
+requests
+pandas

@@ -4,18 +4,38 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
+import 'dotenv/config';
+import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
+
+// Log all requests
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.path}`);
+  fs.appendFileSync('server-debug.log', `[${timestamp}] ${req.method} ${req.path}\n`);
+  next();
+});
 
 const openaiKey = process.env.OPENAI_API_KEY;
 const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
 const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
 
 app.post("/api/reviews/summary", async (req, res) => {
+    console.log("/api/reviews/summary called");
+    console.log("OPENAI_API_KEY at request:", process.env.OPENAI_API_KEY);
+    console.log("openaiKey variable:", openaiKey);
+    console.log("Request body:", req.body);
+    // Write to file for debugging
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync('server-debug.log', `\n[${timestamp}] REQUEST RECEIVED\n`);
+    fs.appendFileSync('server-debug.log', `OPENAI_API_KEY: ${process.env.OPENAI_API_KEY}\n`);
+    fs.appendFileSync('server-debug.log', `openaiKey: ${openaiKey}\n`);
   const normalizedUrl = normalizeRateMyProfUrl(req.body?.url ?? "");
   if (!normalizedUrl) {
     return res.status(400).json({
@@ -42,7 +62,10 @@ app.post("/api/reviews/summary", async (req, res) => {
       reviewsCount: reviews.length,
     });
   } catch (error) {
-    console.error("Failed to summarize reviews:", error);
+    console.error("Error in /api/reviews/summary:", error);
+    console.error("OPENAI_API_KEY at error:", process.env.OPENAI_API_KEY);
+    console.error("openaiKey variable at error:", openaiKey);
+    console.error("Request body at error:", req.body);
     return res.status(500).json({
       error: "Unable to summarize reviews right now",
       details: error instanceof Error ? error.message : String(error),
@@ -87,7 +110,8 @@ app.listen(port, () => {
 function runScraper(url) {
   return new Promise((resolve, reject) => {
     const pythonArgs = ["RMPScraper.py", "--url", url, "--json"];
-    const scraper = spawn("/Users/nathaniel/Desktop/HTTF/HTTF-Team-RMP/venv/bin/python3", pythonArgs, {
+    const pythonCmd = process.platform === "win32" ? "py" : "python3";
+    const scraper = spawn(pythonCmd, pythonArgs, {
       cwd: path.resolve(__dirname, ".."),
       env: process.env,
     });
