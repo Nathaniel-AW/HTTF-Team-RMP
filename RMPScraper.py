@@ -27,6 +27,15 @@ def scrape_all_reviews(professor_url):
     # 🔥 Extract professor ID from URL
     professor_id = professor_url.rstrip("/").split("/")[-1]
 
+    # Get school ID (from school link or URL)
+    try:
+        # Try to find school link and extract ID from href
+        school_link = driver.find_element(By.XPATH, "//a[contains(@href,'/school/')]")
+        school_href = school_link.get_attribute("href")
+        school_id = school_href.rstrip("/").split("/")[-1]
+    except:
+        school_id = "Unknown"
+
     # Get professor name
     try:
         professor_name = wait.until(
@@ -34,6 +43,14 @@ def scrape_all_reviews(professor_url):
         ).text
     except:
         professor_name = "Unknown"
+
+    # Get school name (usually in a span or div near the top)
+    try:
+        # Try common selectors for school name
+        school_elem = driver.find_element(By.XPATH, "//div[contains(@class,'NameTitle__School')] | //span[contains(@class,'SchoolName')] | //div[contains(@class,'TeacherInfo__School')] | //a[contains(@href,'/school/')]")
+        school_name = school_elem.text.strip()
+    except:
+        school_name = "Unknown"
 
     # Wait for reviews
     wait.until(EC.presence_of_element_located(
@@ -101,6 +118,8 @@ def scrape_all_reviews(professor_url):
         reviews_data.append({
             "professor_id": professor_id,
             "professor_name": professor_name,
+            "school": school_name,
+            "school_id": school_id,
             "course": course,
             "rating": rating,
             "date": date,
@@ -113,8 +132,7 @@ def scrape_all_reviews(professor_url):
 
 
 # 🔹 Replace with real professor URL
-url = "https://www.ratemyprofessors.com/professor/1588835"
-
+url = "https://www.ratemyprofessors.com/professor/2574020"
 df = scrape_all_reviews(url)
 
 # Clean data
@@ -122,7 +140,9 @@ df["rating"] = pd.to_numeric(df["rating"], errors="coerce")
 df.drop_duplicates(inplace=True)
 
 # Save to CSV
-df.to_csv("professor_reviews.csv", index=False, encoding="utf-8")
+professor_id = df["professor_id"].iloc[0]
+csv_filename = f"{professor_id}.csv"
+df.to_csv(csv_filename, index=False, encoding="utf-8")
 
 print("Scraped", len(df), "reviews")
 print(df.head())
