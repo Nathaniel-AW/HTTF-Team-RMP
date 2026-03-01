@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 function Summary() {
   const location = useLocation();
   const rmpUrl = location.state?.rmpUrl ?? "";
+  const selectedCourses = location.state?.selectedCourses ?? [];
 
   const [summaryParagraph, setSummaryParagraph] = useState("");
   const [numericScore, setNumericScore] = useState(null);
@@ -42,10 +43,15 @@ function Summary() {
       setChatError("");
 
       try {
+        const requestBody = { professorUrl: rmpUrl };
+        if (Array.isArray(selectedCourses) && selectedCourses.length > 0) {
+          requestBody.selectedCourses = selectedCourses;
+        }
+
         const response = await fetch("/api/reviews/summary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ professorUrl: rmpUrl }),
+          body: JSON.stringify(requestBody),
         });
 
         let data = {};
@@ -123,7 +129,7 @@ function Summary() {
     return () => {
       isCancelled = true;
     };
-  }, [rmpUrl]);
+  }, [rmpUrl, selectedCourses]);
 
   async function handleChatSubmit(event) {
     event.preventDefault();
@@ -192,6 +198,17 @@ function Summary() {
   return (
     <section className="container summary-container">
       <h2>Summary</h2>
+
+      {selectedCourses && selectedCourses.length > 0 ? (
+        <div style={{ marginBottom: "20px", padding: "10px", backgroundColor: "#f0f8ff", borderRadius: "4px" }}>
+          <p style={{ margin: "0 0 8px 0", fontWeight: "bold" }}>
+            Analyzing reviews for {selectedCourses.length} course{selectedCourses.length !== 1 ? "s" : ""}:
+          </p>
+          <p style={{ margin: 0 }}>
+            {selectedCourses.join(", ")}
+          </p>
+        </div>
+      ) : null}
 
       {loadingSummary ? <p>Generating summary, score, and context...</p> : null}
 

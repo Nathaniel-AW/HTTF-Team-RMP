@@ -49,7 +49,7 @@ function EndScore() {
         }
 
         setValidationError("");
-        navigate("/summary", { state: { rmpUrl: normalizedUrl } });
+        navigate("/courseSelection", { state: { rmpUrl: normalizedUrl } });
     }
 
     return (

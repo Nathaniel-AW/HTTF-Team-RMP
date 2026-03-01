@@ -21,6 +21,54 @@ const MAX_CONTEXT_REVIEWS = 60;
 const MAX_REVIEW_TEXT_CHARS = 800;
 const MAX_PROMPT_REVIEW_TEXT_CHARS = 420;
 
+app.post("/api/reviews/courses", async (req, res) => {
+  const normalizedUrl = normalizeRateMyProfUrl(
+    req.body?.professorUrl ?? req.body?.url ?? "",
+  );
+
+  if (!normalizedUrl) {
+    return res.status(400).json({
+      error:
+        "Please provide a valid RateMyProfessors professor URL (example: https://www.ratemyprofessors.com/professor/3126905).",
+    });
+  }
+
+  try {
+    const professorId = normalizedUrl.split("/").pop();
+
+    let reviews = await getReviewsFromLocalFile(professorId);
+    if (!reviews) {
+      const { reviews: scrapedReviews } = await runScraper(normalizedUrl);
+      reviews = scrapedReviews;
+    }
+
+    if (!Array.isArray(reviews) || reviews.length === 0) {
+      return res.status(404).json({ error: "No reviews found for that professor" });
+    }
+
+    // Extract unique courses from reviews
+    const coursesSet = new Set();
+    reviews.forEach((review) => {
+      const course = cleanString(review.course ?? review.courseName);
+      if (course) {
+        coursesSet.add(course);
+      }
+    });
+
+    const courses = Array.from(coursesSet).sort();
+
+    return res.json({
+      courses,
+      totalReviews: reviews.length,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Unable to fetch courses right now",
+      details: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 app.post(["/api/reviews/summary", "/api/summarize"], async (req, res) => {
   const normalizedUrl = normalizeRateMyProfUrl(
     req.body?.professorUrl ?? req.body?.url ?? "",
@@ -41,6 +89,7 @@ app.post(["/api/reviews/summary", "/api/summarize"], async (req, res) => {
 
   try {
     const professorId = normalizedUrl.split("/").pop();
+    const selectedCourses = req.body?.selectedCourses;
 
     let reviews = await getReviewsFromLocalFile(professorId);
     if (!reviews) {
@@ -52,7 +101,30 @@ app.post(["/api/reviews/summary", "/api/summarize"], async (req, res) => {
       return res.status(404).json({ error: "No reviews found for that professor" });
     }
 
+    const totalReviews = reviews.length;
+    console.log(`[Summary] Total reviews loaded: ${totalReviews}`);
+
+    // Filter reviews by selected courses if provided
+    if (Array.isArray(selectedCourses) && selectedCourses.length > 0) {
+      console.log(`[Summary] Filtering by ${selectedCourses.length} courses:`, selectedCourses);
+      const courseSet = new Set(selectedCourses.map((c) => String(c).trim()));
+      reviews = reviews.filter((review) => {
+        const course = cleanString(review.course ?? review.courseName);
+        return course && courseSet.has(course);
+      });
+      console.log(`[Summary] Reviews after filtering: ${reviews.length} (from ${totalReviews})`);
+
+      if (reviews.length === 0) {
+        return res.status(404).json({
+          error: "No reviews found for the selected courses",
+        });
+      }
+    } else {
+      console.log(`[Summary] No course filter applied - using all reviews`);
+    }
+
     const professorContext = buildProfessorContext(reviews);
+    console.log(`[Summary] Context built with ${professorContext.reviewCount} reviews`);
     if (!professorContext.reviewsSample.length) {
       return res.status(404).json({
         error: "No usable review content found for that professor",

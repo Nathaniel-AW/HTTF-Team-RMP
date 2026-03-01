@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router'
 import Layout from './components/Layout copy'
 import HomePage from './pages/homepage'
 import EndScore from './pages/endScore.jsx'
+import CourseSelection from './pages/courseSelection.jsx'
 import Summary from './pages/summary.jsx'
 import './index.css'
 
@@ -17,6 +18,11 @@ function App() {
         <Route path="/endScore" element={
             <Layout pageTitle="Final Score">
               <EndScore />
+            </Layout>
+        } />
+        <Route path="/courseSelection" element={
+            <Layout pageTitle="Select Courses">
+              <CourseSelection />
             </Layout>
         } />
         <Route path="/summary" element={
