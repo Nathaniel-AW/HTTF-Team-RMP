@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router'
 import Layout from './components/Layout copy'
 import HomePage from './pages/homepage'
+import SearchResults from './pages/searchResults.jsx'
 import './index.css'
 
 //supabase const
@@ -11,7 +12,7 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={
-          <Layout pageTitle="Hello">
+          <Layout pageTitle="Professor Review">
             <header>
               <h1>HTTF Team RMP</h1>
               <p>Supabase client configured; inspect the data below.</p>
@@ -20,9 +21,19 @@ function App() {
             <HomePage />
           </Layout>
         } />
-        <Route path="/goal-setting" element={
-          <Layout pageTitle="Solace - Goal Setting" pageSubtitle="Define and track your personalized wellness objectives">
-            <searchResults />
+        <Route path="/searchResults" element={
+          <Layout pageTitle="Search Results" pageSubtitle="Here are the list of professors we identified from you inputs:">
+            <SearchResults />
+          </Layout>
+      } />
+        <Route path="/studentScore" element={
+            <Layout pageTitle="Student Base Score">
+              <studentScore />
+            </Layout>
+        } />
+        <Route path="/professorScore" element={
+          <Layout pageTitle="Search Results">
+            <professorScore />
           </Layout>
       } />
       </Routes>
