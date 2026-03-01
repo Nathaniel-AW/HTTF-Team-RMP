@@ -132,7 +132,7 @@ def scrape_all_reviews(professor_url):
 
 
 # 🔹 Replace with real professor URL
-url = "https://www.ratemyprofessors.com/professor/3076248"
+url = "https://www.ratemyprofessors.com/professor/2348540"
 df = scrape_all_reviews(url)
 
 # Clean data
