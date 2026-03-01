@@ -4,7 +4,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
-import 'dotenv/config';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -86,7 +86,7 @@ app.listen(port);
 function runScraper(url) {
   return new Promise((resolve, reject) => {
     const pythonArgs = ["RMPScraper.py", "--url", url, "--json"];
-    const pythonCmd = process.platform === "win32" ? "py" : "python3";
+    const pythonCmd = process.platform === "win32" ? "py" : "venv/bin/python3";
     const scraper = spawn(pythonCmd, pythonArgs, {
       cwd: path.resolve(__dirname, ".."),
       env: process.env,

@@ -9,6 +9,7 @@ import pandas as pd
 import time
 import re
 import argparse
+from pathlib import Path
 
 
 def scrape_all_reviews(professor_url):
@@ -135,12 +136,15 @@ def clean_and_export(df: pd.DataFrame, csv_path: str | None = None, verbose: boo
     df["rating"] = pd.to_numeric(df["rating"], errors="coerce")
     df.drop_duplicates(inplace=True)
 
+    output_dir = Path("professor data")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     if csv_path:
         output_path = csv_path
     elif not df.empty and "professor_id" in df.columns:
-        output_path = f"{df['professor_id'].iloc[0]}.csv"
+        output_path = str(output_dir / f"{df['professor_id'].iloc[0]}.csv")
     else:
-        output_path = "reviews.csv"
+        output_path = str(output_dir / "reviews.csv")
 
     df.to_csv(output_path, index=False, encoding="utf-8")
     if verbose:
