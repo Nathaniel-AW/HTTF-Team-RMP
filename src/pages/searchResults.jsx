@@ -15,15 +15,15 @@ function SearchResults() {
                         to="/"
                         aria-label="Go back to homepage"
                     >
-                        <button><p style={{flex: "none",color: "black", left: "0"}}>Back</p></button>
+                        <button type="button">Back to homepage</button>
                     </Link>
                 </div>
 
                 <div className="Query-Card">
                     {professors.map((prof) => (
                         <Link 
-                            to="/studentScore" 
-                            aria-label="Go to search Results"
+                            to="/endScore" 
+                            aria-label="Go to final score"
                         >
                             <button className="result-button" type="submit">
                                 <h2>{prof.name}</h2>

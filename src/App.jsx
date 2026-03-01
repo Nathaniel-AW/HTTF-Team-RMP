@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router'
 import Layout from './components/Layout copy'
 import HomePage from './pages/homepage'
 import SearchResults from './pages/searchResults.jsx'
+import EndScore from './pages/endScore.jsx'
 import './index.css'
 
 function App() {
@@ -10,10 +11,6 @@ function App() {
       <Routes>
         <Route path="/" element={
           <Layout pageTitle="Professor Review">
-            <header>
-              <h1>HTTF Team RMP</h1>
-              <p>RateMyProf review summarizer</p>
-            </header>
             <HomePage />
           </Layout>
         } />
@@ -22,16 +19,11 @@ function App() {
             <SearchResults />
           </Layout>
       } />
-        <Route path="/studentScore" element={
-            <Layout pageTitle="Student Base Score">
-              <studentScore />
+        <Route path="/endScore" element={
+            <Layout pageTitle="Final Score">
+              <EndScore />
             </Layout>
         } />
-        <Route path="/professorScore" element={
-          <Layout pageTitle="Search Results">
-            <professorScore />
-          </Layout>
-      } />
       </Routes>
     </>
   )

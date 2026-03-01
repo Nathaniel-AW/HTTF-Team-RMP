@@ -87,7 +87,7 @@ app.listen(port, () => {
 function runScraper(url) {
   return new Promise((resolve, reject) => {
     const pythonArgs = ["RMPScraper.py", "--url", url, "--json"];
-    const scraper = spawn("python3", pythonArgs, {
+    const scraper = spawn("/Users/nathaniel/Desktop/HTTF/HTTF-Team-RMP/venv/bin/python3", pythonArgs, {
       cwd: path.resolve(__dirname, ".."),
       env: process.env,
     });
