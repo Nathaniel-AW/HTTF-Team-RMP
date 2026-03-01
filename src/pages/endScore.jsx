@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const RATE_MY_PROFESSORS_PATH_REGEX = /^\/professor\/\d+/;
 
@@ -34,13 +35,13 @@ function normalizeRateMyProfUrl(value) {
 
 
 function EndScore() {
-    const [rmpUrl, setRmpUrl] = useState("");    
+    const [rmpUrl, setRmpUrl] = useState("");
     const [summary, setSummary] = useState("");
     const [reviewsCount, setReviewsCount] = useState(0);
     const [loadingSummary, setLoadingSummary] = useState(false);
     const [summaryError, setSummaryError] = useState("");
 
-        async function handleGenerateSummary() {
+    async function handleGenerateSummary() {
         const normalizedUrl = normalizeRateMyProfUrl(rmpUrl);
         if (!normalizedUrl) {
             setSummaryError(
@@ -92,6 +93,7 @@ function EndScore() {
             setLoadingSummary(false);
         }
     }
+
     return (
         <>
             <div>
@@ -104,28 +106,10 @@ function EndScore() {
                     />
             </div>
             <div>
-                <button
-                    type="button"
-                    onClick={handleGenerateSummary}
-                    disabled={loadingSummary}
-                >
-                    {loadingSummary ? "Generating summary…" : "Generate summary"}
-                </button>
+                <Link to="/summary" aria-label="Go to summary">
+                    <button type="submit">Generating Summary</button>
+                </Link>
             </div>
-            {summaryError && (
-                <p style={{ color: "crimson" }}>{summaryError}</p>
-            )}
-
-            {loadingSummary && (
-                <p>Scraping reviews and asking OpenAI for a summary (may take 20–30 seconds)...</p>
-            )}
-
-            {summary && (
-                <section className="summary-block">
-                    <h3>Professor summary ({reviewsCount} reviews)</h3>
-                    <p>{summary}</p>
-                </section>
-            )}
         </>
     )
 }

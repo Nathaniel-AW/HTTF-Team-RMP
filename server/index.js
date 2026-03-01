@@ -5,7 +5,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
 import { promises as fs } from "fs";
-import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();

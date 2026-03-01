@@ -37,11 +37,6 @@ function HomePage() {
     const [school, setSchool] = useState("");
     const [professor, setProfessor] = useState("");
     const [userType, setUserType] = useState("student");
-    const [rmpUrl, setRmpUrl] = useState("");
-    const [summary, setSummary] = useState("");
-    const [reviewsCount, setReviewsCount] = useState(0);
-    const [loadingSummary, setLoadingSummary] = useState(false);
-    const [summaryError, setSummaryError] = useState("");
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -52,58 +47,6 @@ function HomePage() {
         }
     }
 
-    async function handleGenerateSummary() {
-        const normalizedUrl = normalizeRateMyProfUrl(rmpUrl);
-        if (!normalizedUrl) {
-            setSummaryError(
-                "Please provide a valid RateMyProfessors professor URL (e.g., https://www.ratemyprofessors.com/professor/3126905)."
-            );
-            return;
-        }
-
-        setRmpUrl(normalizedUrl);
-
-        setLoadingSummary(true);
-        setSummaryError("");
-        setSummary("");
-
-        try {
-            const response = await fetch("/api/reviews/summary", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: normalizedUrl }),
-            });
-            let data = {};
-            try {
-                data = await response.json();
-            } catch {
-                data = {};
-            }
-
-            if (!response.ok) {
-                const errorMessage = data?.details
-                    ? `${data.error ?? "Unable to summarize reviews."} (${data.details})`
-                    : (data.error ?? "Unable to summarize reviews.");
-                throw new Error(errorMessage);
-            }
-
-            setSummary(data.summary ?? "");
-            setReviewsCount(data.reviewsCount ?? 0);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "";
-            const isNetworkFailure =
-                message === "Failed to fetch" ||
-                message === "Load failed" ||
-                message.includes("NetworkError");
-            setSummaryError(
-                isNetworkFailure
-                    ? "Cannot reach the API server. Start `npm run server` and keep it running, then try again."
-                    : (message || "Something went wrong.")
-            );
-        } finally {
-            setLoadingSummary(false);
-        }
-    }
     return (
         <>
             <div className="container">
@@ -136,15 +79,6 @@ function HomePage() {
                                 value={professor}
                                 onChange={(event) => setProfessor(event.target.value)}
                                 placeholder="Enter your Professor Name"
-                            />
-                        </div>
-                        <div>
-                            <p>RateMyProfessors professor URL:</p>
-                            <input
-                                type="text"
-                                value={rmpUrl}
-                                onChange={(event) => setRmpUrl(event.target.value)}
-                                placeholder="https://www.ratemyprofessors.com/professor/123456"
                             />
                         </div>
                         <div>

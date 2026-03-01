@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router'
 import Layout from './components/Layout copy'
 import HomePage from './pages/homepage'
 import EndScore from './pages/endScore.jsx'
+import Summary from './pages/summary.jsx'
 import './index.css'
 
 function App() {
@@ -16,6 +17,11 @@ function App() {
         <Route path="/endScore" element={
             <Layout pageTitle="Final Score">
               <EndScore />
+            </Layout>
+        } />
+        <Route path="/summary" element={
+            <Layout pageTitle="Summary">
+              <Summary />
             </Layout>
         } />
       </Routes>
