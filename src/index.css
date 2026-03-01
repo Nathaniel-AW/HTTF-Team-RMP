@@ -440,8 +440,6 @@ button:hover {
     clip: rect(0,0,0,0);
     border: 0;
 }
-<<<<<<< HEAD
-
 /* homepage landing styles */
 .homepage-landing {
     text-align: center;
@@ -621,5 +619,3 @@ button:hover {
     from { opacity: 0; }
     to { opacity: 1; }
 }
-=======
->>>>>>> 96067a5b5d95d7a7bfcfd05370a8bfe74f4f07e5
