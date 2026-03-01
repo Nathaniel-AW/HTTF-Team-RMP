@@ -36,6 +36,7 @@ function normalizeRateMyProfUrl(value) {
 function HomePage() {
     const [school, setSchool] = useState("");
     const [professor, setProfessor] = useState("");
+    const [userType, setUserType] = useState("student");
     const [rmpUrl, setRmpUrl] = useState("");
     const [summary, setSummary] = useState("");
     const [reviewsCount, setReviewsCount] = useState(0);
@@ -45,7 +46,7 @@ function HomePage() {
     function handleSubmit(e) {
         e.preventDefault();
 
-        if (!school || !professor.trim()) {
+        if (!userType || !school || !professor) {
             alert("Please complete all fields");
             return;
         }
@@ -90,16 +91,24 @@ function HomePage() {
             setLoadingSummary(false);
         }
     }
-
     return (
         <>
             <div className="container">
                 <div>
                     <h2>Professor Review</h2>
-                    <p>Find your School from this list:</p>
                     <form onSubmit={handleSubmit}>
 
                         <div>
+                            <p>What are you using us for?</p>
+                            <select 
+                                value={userType}
+                                onChange={(event) => setUserType(event.target.value)}
+                            >
+                                <option value="">-</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
+                            <p>Find your School from this list:</p>
                             <select
                                 value={school}
                                 onChange={(event) => setSchool(event.target.value)}
@@ -108,9 +117,7 @@ function HomePage() {
                                 <option value="University of Washington">University of Washington</option>
                             </select>
 
-                            <p>
-                                Input the name of your Professor:
-                            </p>
+                            <p>Input the name of your Professor:</p>
                             <input
                                 type="text"
                                 value={professor}
